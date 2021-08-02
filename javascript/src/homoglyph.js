@@ -37,17 +37,40 @@ var buildSearchFunction = function(charMap) {
     }
 
     return function(inputText, targetWords) {
-        var allMatches = [],
-            inputTextSymbolArray = makeSymbolArray(inputText);
-        targetWords.forEach(function(targetWord){
-            Array.prototype.push.apply(allMatches, checkForWord(inputTextSymbolArray, targetWord));
+        var inputTextSymbolArray = makeSymbolArray(inputText);
+        var allMatches = targetWords.map(function(targetWord){
+            return checkForWord(inputTextSymbolArray, targetWord);
         });
         return allMatches;
     };
 };
 
-// Builds a search function that checks for homoglyphs of the following characters: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.
-var search = buildSearchFunction({
+var buildToAscii = function(charMap){
+    var lookupChars = Object.keys(charMap);
+    var reverseMap = lookupChars.reduce(function(accumulatorMap, char){
+        var newKeys = charMap[char];
+        var keyValuePairs = newKeys.map(function(key){
+            return [key, char];
+        });
+        var appendMap = Object.fromEntries(keyValuePairs);
+        return Object.assign({}, accumulatorMap, appendMap);
+    }, {});
+    var symbolArray = Object.keys(reverseMap);
+
+    return function(txt) {
+        var inputTextSymbolArray = txt.split('');
+        var remappedSymbolArray = inputTextSymbolArray.map(function(char){
+            if (symbolArray.includes(char)){
+                return reverseMap[char];
+            }
+            return char;
+        });
+        var reconstructedText = remappedSymbolArray.join('');
+        return reconstructedText;
+    }
+};
+
+var homoglyphCharMap = {
     "-": ["\u{06d4}", "\u{2cba}", "\u{fe58}", "\u{02d7}", "\u{2212}", "\u{2796}", "\u{2011}", "\u{2043}", "\u{2012}", "\u{2013}", "\u{2010}"],
     ".": ["\u{0701}", "\u{0660}", "\u{2024}", "\u{06f0}", "\u{a60e}", "\u{a4f8}", "\u{0702}", "\u{10a50}", "\u{ff0e}", "\u{1d16d}"],
     "0": ["\u{1d476}", "\u{0585}", "\u{004f}", "\u{fbaa}", "\u{1d4aa}", "\u{06be}", "\u{1d70e}", "\u{09e6}", "\u{0d02}", "\u{1d4de}", "\u{fee9}", "\u{1d630}", "\u{06c1}", "\u{1ee24}", "\u{1d45c}", "\u{0a66}", "\u{1d7bc}", "\u{0c02}", "\u{10ff}", "\u{1d490}", "\u{1d5c8}", "\u{0d82}", "\u{ff4f}", "\u{1d744}", "\u{0d20}", "\u{1d5fc}", "\u{fba6}", "\u{0c66}", "\u{102ab}", "\u{1d11}", "\u{0665}", "\u{fbab}", "\u{1d6d0}", "\u{1d7b8}", "\u{118c8}", "\u{104c2}", "\u{1d546}", "\u{ff10}", "\u{1d442}", "\u{039f}", "\u{10292}", "\u{1d79e}", "\u{feec}", "\u{1d7ce}", "\u{1d782}", "\u{1d6d4}", "\u{06f5}", "\u{fbad}", "\u{a4f3}", "\u{feeb}", "\u{1ee64}", "\u{118e0}", "\u{10404}", "\u{2d54}", "\u{1d7ec}", "\u{feea}", "\u{3007}", "\u{1040}", "\u{fba7}", "\u{1d77e}", "\u{1d428}", "\u{0ae6}", "\u{118b5}", "\u{1d698}", "\u{104ea}", "\u{0ed0}", "\u{05e1}", "\u{1d4f8}", "\u{0647}", "\u{0c82}", "\u{0966}", "\u{0d66}", "\u{1d7e2}", "\u{118d7}", "\u{1d64a}", "\u{fbac}", "\u{1d764}", "\u{1042c}", "\u{1d748}", "\u{2134}", "\u{1d67e}", "\u{0b66}", "\u{041e}", "\u{ab3d}", "\u{1ee84}", "\u{1d6f0}", "\u{1fbf0}", "\u{0ce6}", "\u{114d0}", "\u{1d7d8}", "\u{06d5}", "\u{1d70a}", "\u{1d40e}", "\u{0b20}", "\u{0e50}", "\u{1d52c}", "\u{1d594}", "\u{1d616}", "\u{1d5ae}", "\u{03c3}", "\u{043e}", "\u{12d0}", "\u{1d57a}", "\u{1d72a}", "\u{1d0f}", "\u{006f}", "\u{03bf}", "\u{2c9e}", "\u{1d560}", "\u{0555}", "\u{1d5e2}", "\u{10516}", "\u{0be6}", "\u{07c0}", "\u{1d6b6}", "\u{1d664}", "\u{ff2f}", "\u{1d512}", "\u{fba8}", "\u{fba9}", "\u{1d7f6}", "\u{2c9f}", "\u{101d}"],
@@ -112,4 +135,8 @@ var search = buildSearchFunction({
     "x": ["\u{1d431}", "\u{1d465}", "\u{2a2f}", "\u{1d535}", "\u{1d5d1}", "\u{0445}", "\u{157d}", "\u{1d639}", "\u{1d4cd}", "\u{1d499}", "\u{2179}", "\u{292c}", "\u{1d605}", "\u{00d7}", "\u{166e}", "\u{1d6a1}", "\u{ff58}", "\u{1541}", "\u{1d569}", "\u{292b}", "\u{1d59d}", "\u{1d501}", "\u{1d66d}"],
     "y": ["\u{ab5a}", "\u{1eff}", "\u{0443}", "\u{028f}", "\u{1d606}", "\u{213d}", "\u{1d772}", "\u{04af}", "\u{10e7}", "\u{1d56a}", "\u{1d4ce}", "\u{1d6c4}", "\u{1d63a}", "\u{ff59}", "\u{1d66e}", "\u{1d738}", "\u{0263}", "\u{1d7ac}", "\u{1d502}", "\u{1d466}", "\u{1d6a2}", "\u{03b3}", "\u{1d536}", "\u{1d8c}", "\u{1d49a}", "\u{118dc}", "\u{1d432}", "\u{1d59e}", "\u{1d6fe}", "\u{1d5d2}"],
     "z": ["\u{1d49b}", "\u{1d433}", "\u{1d59f}", "\u{1d63b}", "\u{1d56b}", "\u{1d607}", "\u{1d537}", "\u{1d22}", "\u{1d4cf}", "\u{ab93}", "\u{1d467}", "\u{1d66f}", "\u{1d6a3}", "\u{118c4}", "\u{1d503}", "\u{1d5d3}", "\u{ff5a}"]
-});
+};
+
+// Builds a search function that checks for homoglyphs of the following characters: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.
+var search = buildSearchFunction(homoglyphCharMap);
+var toASCII = buildToAscii(homoglyphCharMap);
